@@ -84,6 +84,50 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.error(f"Не удалось отправить сообщение об ошибке: {send_error}")
 
 
+async def handle_document_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик документов-изображений: обрабатывает несжатые файлы изображений"""
+    try:
+        document = update.message.document
+        
+        # Проверяем, что это изображение (по MIME type или расширению)
+        image_mime_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
+        
+        is_image = False
+        if document.mime_type and document.mime_type.lower() in image_mime_types:
+            is_image = True
+        elif document.file_name:
+            file_ext = document.file_name.lower()
+            is_image = any(file_ext.endswith(ext) for ext in image_extensions)
+        
+        if not is_image:
+            logger.info(f"Получен документ, но не изображение: {document.mime_type} от {update.effective_chat.id}")
+            return
+        
+        file = await document.get_file()
+        
+        logger.info(f"Получено изображение как документ от пользователя {update.effective_chat.id}, file_id: {file.file_id}")
+        
+        # Отправляем пользователю то же самое изображение обратно
+        await context.bot.send_document(
+            chat_id=update.effective_chat.id,
+            document=file.file_id,  # Используем file_id для отправки того же файла
+            caption="✅ Вот ваше изображение!"
+        )
+        
+        logger.info(f"Изображение (документ) успешно отправлено обратно пользователю {update.effective_chat.id}")
+        
+    except Exception as e:
+        logger.error(f"Ошибка при обработке документа-изображения: {e}", exc_info=True)
+        try:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="❌ Произошла ошибка при обработке изображения. Попробуйте еще раз."
+            )
+        except Exception as send_error:
+            logger.error(f"Не удалось отправить сообщение об ошибке: {send_error}")
+
+
 def main():
     """Главная функция для запуска бота"""
     if not TELEGRAM_TOKEN:
@@ -96,9 +140,11 @@ def main():
     # Регистрация обработчиков
     start_handler = CommandHandler('start', start)
     photo_handler = MessageHandler(filters.PHOTO, handle_photo)
+    document_handler = MessageHandler(filters.Document.ALL, handle_document_photo)  # Обработка несжатых изображений
     
     application.add_handler(start_handler)
     application.add_handler(photo_handler)
+    application.add_handler(document_handler)
     
     logger.info("Бот запущен и ожидает сообщений...")
     
