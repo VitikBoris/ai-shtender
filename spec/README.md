@@ -1,0 +1,18 @@
+# Спецификация: Telegram Bot (S3-as-DB)
+
+Спецификация разбита на отдельные файлы по темам. Порядок чтения — по номерам.
+
+| Файл | Содержание |
+|------|------------|
+| [01-overview.md](01-overview.md) | Обзор проекта, концепция S3-as-DB, цели |
+| [02-architecture.md](02-architecture.md) | Архитектура: диаграмма, поток данных (YC и локальный) |
+| [03-tech-stack.md](03-tech-stack.md) | Стек: Yandex Cloud и локально (FastAPI, MinIO) |
+| [04-s3-data.md](04-s3-data.md) | S3: images/, tasks/, users/, JSON, Lifecycle, идемпотентность |
+| [05-api-endpoints.md](05-api-endpoints.md) | Эндпоинты, маршрутизация |
+| [06-handlers.md](06-handlers.md) | Логика fn-handler и fn-callback, /menu, retry, безопасность |
+| [07-local-dev.md](07-local-dev.md) | Локальная разработка: Docker, MinIO, ngrok, структура кода |
+| [08-configuration.md](08-configuration.md) | Переменные окружения, лимиты, MinIO/YC |
+| [09-prompts.md](09-prompts.md) | Промпты для ИИ-разработчика |
+
+---
+*Источники: docs/specification.md, docs/logicsinYandexCloud.md, docs/final_spec.md*
