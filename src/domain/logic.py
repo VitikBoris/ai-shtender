@@ -15,12 +15,23 @@ from src.utils.images import get_largest_photo, validate_image_mime, validate_im
 logger = logging.getLogger(__name__)
 
 
-async def process_telegram_photo(update_data: Dict[str, Any]) -> None:
+async def process_telegram_image(
+    update_data: Dict[str, Any],
+    file_id: Optional[str] = None,
+    file_size: Optional[int] = None,
+    file_name: Optional[str] = None,
+    mime_type: Optional[str] = None
+) -> None:
     """
-    Обработать фото от пользователя: скачать, загрузить в S3, отправить в Replicate.
+    Обработать изображение от пользователя: скачать, загрузить в S3, отправить в Replicate.
+    Универсальная функция для обработки как фото, так и документов-изображений.
     
     Args:
         update_data: Данные Update от Telegram API
+        file_id: ID файла (если уже известен, например из document)
+        file_size: Размер файла (если уже известен)
+        file_name: Имя файла (для документов)
+        mime_type: MIME-тип файла (для документов)
     """
     try:
         message = update_data.get("message", {})
@@ -32,21 +43,22 @@ async def process_telegram_photo(update_data: Dict[str, Any]) -> None:
             logger.error("Не удалось извлечь chat_id или user_id из сообщения")
             return
         
-        # Извлечь фото (выбрать максимальный размер)
-        photos = message.get("photo", [])
-        if not photos:
-            logger.warning(f"Сообщение от {chat_id} не содержит фото")
-            await telegram_api.send_message(
-                chat_id,
-                "Пожалуйста, отправьте фото для обработки."
-            )
-            return
+        # Если file_id не передан, попробовать извлечь из фото
+        if not file_id:
+            photos = message.get("photo", [])
+            if not photos:
+                logger.warning(f"Сообщение от {chat_id} не содержит фото")
+                await telegram_api.send_message(
+                    chat_id,
+                    "Пожалуйста, отправьте фото для обработки."
+                )
+                return
+            
+            largest_photo = get_largest_photo(photos)
+            file_id = largest_photo.get("file_id")
+            file_size = largest_photo.get("file_size", 0)
         
-        largest_photo = get_largest_photo(photos)
-        file_id = largest_photo.get("file_id")
-        file_size = largest_photo.get("file_size", 0)
-        
-        logger.info(f"Обработка фото от пользователя {user_id} (chat {chat_id}), file_id: {file_id}")
+        logger.info(f"Обработка изображения от пользователя {user_id} (chat {chat_id}), file_id: {file_id}")
         
         # Скачать файл через Telegram API
         file_info = await telegram_api.get_file_info(file_id)
@@ -64,16 +76,29 @@ async def process_telegram_photo(update_data: Dict[str, Any]) -> None:
         # Скачать файл
         file_data = await telegram_api.download_file(file_path)
         
-        # Определить MIME-тип
-        mime_type, _ = mimetypes.guess_type(file_path or "")
+        # Определить MIME-тип (если не передан)
         if not mime_type:
-            # Определить по расширению или дефолт
-            if file_path and file_path.lower().endswith(('.jpg', '.jpeg')):
-                mime_type = "image/jpeg"
-            elif file_path and file_path.lower().endswith('.png'):
-                mime_type = "image/png"
-            else:
-                mime_type = "image/jpeg"  # Дефолт
+            # Сначала попробовать из file_name (для документов)
+            if file_name:
+                mime_type, _ = mimetypes.guess_type(file_name)
+            
+            # Если не получилось, попробовать из file_path
+            if not mime_type:
+                mime_type, _ = mimetypes.guess_type(file_path or "")
+            
+            # Если все еще не получилось, определить по расширению
+            if not mime_type:
+                if file_path and file_path.lower().endswith(('.jpg', '.jpeg')):
+                    mime_type = "image/jpeg"
+                elif file_path and file_path.lower().endswith('.png'):
+                    mime_type = "image/png"
+                elif file_name:
+                    if file_name.lower().endswith(('.jpg', '.jpeg')):
+                        mime_type = "image/jpeg"
+                    elif file_name.lower().endswith('.png'):
+                        mime_type = "image/png"
+                else:
+                    mime_type = "image/jpeg"  # Дефолт
         
         # Проверить MIME-тип
         if not validate_image_mime(mime_type, config.ALLOWED_IMAGE_MIME):
@@ -88,8 +113,22 @@ async def process_telegram_photo(update_data: Dict[str, Any]) -> None:
         now = datetime.utcnow()
         date_path = f"{now.year}/{now.month:02d}/{now.day:02d}"
         
-        # Определить расширение
-        extension = ".jpg" if mime_type == "image/jpeg" else ".png"
+        # Определить расширение из MIME-типа или имени файла
+        if mime_type == "image/jpeg":
+            extension = ".jpg"
+        elif mime_type == "image/png":
+            extension = ".png"
+        elif file_name:
+            # Попробовать извлечь расширение из имени файла
+            if file_name.lower().endswith(('.jpg', '.jpeg')):
+                extension = ".jpg"
+            elif file_name.lower().endswith('.png'):
+                extension = ".png"
+            else:
+                extension = ".jpg"  # Дефолт
+        else:
+            extension = ".jpg"  # Дефолт
+        
         s3_key = f"images/input/{date_path}/{file_uuid}{extension}"
         
         # Загрузить в S3
@@ -172,6 +211,78 @@ async def process_telegram_photo(update_data: Dict[str, Any]) -> None:
                 await telegram_api.send_message(
                     chat_id,
                     "❌ Произошла ошибка при обработке фото. Попробуйте еще раз."
+                )
+        except:
+            pass
+
+
+async def process_telegram_photo(update_data: Dict[str, Any]) -> None:
+    """
+    Обработать фото от пользователя (обертка для обратной совместимости).
+    
+    Args:
+        update_data: Данные Update от Telegram API
+    """
+    await process_telegram_image(update_data)
+
+
+async def process_telegram_document(update_data: Dict[str, Any]) -> None:
+    """
+    Обработать документ-изображение от пользователя.
+    
+    Args:
+        update_data: Данные Update от Telegram API
+    """
+    try:
+        message = update_data.get("message", {})
+        document = message.get("document", {})
+        
+        if not document:
+            return
+        
+        # Проверить, что это изображение
+        doc_mime_type = document.get("mime_type", "")
+        doc_file_name = document.get("file_name", "")
+        
+        # Список разрешенных MIME-типов изображений
+        image_mime_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
+        
+        is_image = False
+        if doc_mime_type and doc_mime_type.lower() in image_mime_types:
+            is_image = True
+        elif doc_file_name:
+            file_ext = doc_file_name.lower()
+            is_image = any(file_ext.endswith(ext) for ext in image_extensions)
+        
+        if not is_image:
+            logger.info(f"Получен документ, но не изображение: {doc_mime_type} от {message.get('chat', {}).get('id')}")
+            return
+        
+        # Извлечь данные документа
+        file_id = document.get("file_id")
+        file_size = document.get("file_size", 0)
+        
+        logger.info(f"Обработка документа-изображения: {doc_file_name}, file_id: {file_id}")
+        
+        # Использовать универсальную функцию обработки
+        await process_telegram_image(
+            update_data,
+            file_id=file_id,
+            file_size=file_size,
+            file_name=doc_file_name,
+            mime_type=doc_mime_type
+        )
+        
+    except Exception as e:
+        logger.error(f"Ошибка при обработке документа-изображения: {e}", exc_info=True)
+        try:
+            message = update_data.get("message", {})
+            chat_id = message.get("chat", {}).get("id")
+            if chat_id:
+                await telegram_api.send_message(
+                    chat_id,
+                    "❌ Произошла ошибка при обработке изображения. Попробуйте еще раз."
                 )
         except:
             pass

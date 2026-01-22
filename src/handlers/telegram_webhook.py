@@ -79,6 +79,11 @@ async def process_telegram_update(update_data: dict):
             if "photo" in message:
                 await logic.process_telegram_photo(update_data)
                 return
+            
+            # Обработка документов (несжатые изображения)
+            if "document" in message:
+                await logic.process_telegram_document(update_data)
+                return
         
         logger.warning(f"Неизвестный тип обновления: {update_data.keys()}")
         
