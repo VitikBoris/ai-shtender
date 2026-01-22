@@ -4,6 +4,8 @@
 
 Вместо Cloud Functions — **FastAPI** (вебхуки). Вместо Yandex Object Storage — **MinIO** (S3-совместимый).
 
+> **Гайды по установке:** См. [docs/setup/](../docs/setup/) для инструкций по установке Docker, MinIO и ngrok.
+
 ## Docker Compose
 
 ```yaml

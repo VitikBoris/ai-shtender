@@ -14,5 +14,13 @@
 | [08-configuration.md](08-configuration.md) | Переменные окружения, лимиты, MinIO/YC |
 | [09-prompts.md](09-prompts.md) | Промпты для ИИ-разработчика |
 
+## Гайды по установке
+
+Все гайды по установке и настройке инструментов находятся в [docs/setup/](../docs/setup/):
+
+- [Установка Docker и Docker Compose](../docs/setup/docker-compose-install.md)
+- [Настройка MinIO](../docs/setup/minio-setup.md)
+- [Настройка ngrok](../docs/setup/ngrok-setup.md)
+
 ---
 *Источники: docs/specification.md, docs/logicsinYandexCloud.md, docs/final_spec.md*
