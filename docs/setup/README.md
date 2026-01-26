@@ -7,6 +7,7 @@
 - [Установка Docker и Docker Compose](docker-compose-install.md) - подробная инструкция по установке Docker и Docker Compose для Windows, Linux и macOS
 - [Настройка MinIO](minio-setup.md) - настройка локального S3-эмулятора MinIO
 - [Настройка ngrok](ngrok-setup.md) - настройка туннелирования для локальной разработки
+- [Настройка Yandex Cloud CLI](yc-cli-setup.md) - установка и настройка YC CLI для работы с Yandex Cloud
 
 ## Быстрая проверка
 
@@ -24,6 +25,9 @@ python --version
 
 # Проверить ngrok (если установлен)
 ngrok version
+
+# Проверить YC CLI (если установлен)
+yc version
 ```
 
 ## Порядок установки
@@ -31,6 +35,7 @@ ngrok version
 1. **Docker и Docker Compose** - [гайд по установке](docker-compose-install.md)
 2. **MinIO** - настраивается автоматически через docker-compose, но можно настроить вручную - [гайд по настройке](minio-setup.md)
 3. **ngrok** - необходим для локальной разработки с webhook-ами - [гайд по настройке](ngrok-setup.md)
+4. **Yandex Cloud CLI** - необходим для работы с Yandex Object Storage и Cloud Functions - [гайд по настройке](yc-cli-setup.md)
 
 ## Следующие шаги
 

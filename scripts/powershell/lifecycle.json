@@ -1,0 +1,34 @@
+{
+  "lifecycleRules": [
+    {
+      "id": "delete-tasks-after-1-day",
+      "enabled": true,
+      "filter": {
+        "prefix": "tasks/"
+      },
+      "expiration": {
+        "days": 1
+      }
+    },
+    {
+      "id": "delete-input-images-after-14-days",
+      "enabled": true,
+      "filter": {
+        "prefix": "images/input/"
+      },
+      "expiration": {
+        "days": 14
+      }
+    },
+    {
+      "id": "delete-output-images-after-14-days",
+      "enabled": true,
+      "filter": {
+        "prefix": "images/output/"
+      },
+      "expiration": {
+        "days": 14
+      }
+    }
+  ]
+}

@@ -19,8 +19,9 @@
 Все гайды по установке и настройке инструментов находятся в [docs/setup/](../docs/setup/):
 
 - [Установка Docker и Docker Compose](../docs/setup/docker-compose-install.md)
-- [Настройка MinIO](../docs/setup/minio-setup.md)
+- [Настройка MinIO](../docs/setup/minio-setup.md) (устарело, см. feature-2.5)
 - [Настройка ngrok](../docs/setup/ngrok-setup.md)
+- [Настройка Yandex Cloud CLI](../docs/setup/yc-cli-setup.md)
 
 ---
 *Источники: docs/specification.md, docs/logicsinYandexCloud.md, docs/final_spec.md*

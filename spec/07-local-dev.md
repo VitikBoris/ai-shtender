@@ -2,9 +2,11 @@
 
 ## Концепция
 
-Вместо Cloud Functions — **FastAPI** (вебхуки). Вместо Yandex Object Storage — **MinIO** (S3-совместимый).
+Вместо Cloud Functions — **FastAPI** (вебхуки). Для S3 можно использовать:
+- **Yandex Object Storage** (рекомендуется, начиная с feature-2.5) — публичный доступ к presigned URL
+- **MinIO** (эмулятор, для ранних этапов разработки) — требует настройки туннеля для presigned URL
 
-> **Гайды по установке:** См. [docs/setup/](../docs/setup/) для инструкций по установке Docker, MinIO и ngrok.
+> **Гайды по установке:** См. [docs/setup/](../docs/setup/) для инструкций по установке Docker, MinIO, ngrok и YC CLI.
 
 ## Docker Compose
 
@@ -73,19 +75,41 @@ ai-shtender/
 
 `ngrok http 8000` → `BASE_URL` в `.env`.
 
-### 2. S3-as-DB с MinIO
+### 2. S3-as-DB с Yandex Object Storage (рекомендуется)
 
-- `endpoint_url` из `.env` (для MinIO).
+- Настроить YC CLI (см. [docs/setup/yc-cli-setup.md](../docs/setup/yc-cli-setup.md))
+- Создать бакет через CLI или PowerShell скрипт (см. [feature-2.5-yandex-s3.md](../../features/feature-2.5-yandex-s3.md))
+- `endpoint_url=https://storage.yandexcloud.net` в `.env`
+- Запись: `s3.put_object(..., Key=f"tasks/{prediction_id}.json", Body=json.dumps(state))`
+- Чтение: `s3.get_object(..., Key=f"tasks/{prediction_id}.json")`
+- Presigned URL доступен из интернета автоматически
+
+### 2.1. S3-as-DB с MinIO (альтернатива)
+
+- `endpoint_url` из `.env` (для MinIO: `http://minio:9000`).
 - Запись: `s3.put_object(..., Key=f"tasks/{prediction_id}.json", Body=json.dumps(state))`
 - Чтение: `s3.get_object(..., Key=f"tasks/{prediction_id}.json")`
 
 ### 3. Фото для Replicate
 
-Для Presigned URL MinIO должен быть доступен снаружи. Упрощение: можно временно отдавать Replicate прямую ссылку (например, ImgBB) вместо S3.
+**С Yandex Object Storage:** Presigned URL доступен из интернета автоматически, дополнительная настройка не требуется.
+
+**С MinIO:** Для Presigned URL MinIO должен быть доступен снаружи (требуется ngrok для MinIO). Упрощение: можно временно отдавать Replicate прямую ссылку (например, ImgBB) вместо S3.
 
 ## План по шагам
 
-1. `docker-compose up minio` → создать бакет `my-bot-bucket` в `localhost:9001`.
-2. **`/webhook/telegram`:** приём сообщения, загрузка в MinIO, запрос в Replicate с `webhook: BASE_URL/webhook/replicate`.
-3. **`/webhook/replicate`:** приём, чтение `tasks/{prediction_id}.json`, ответ в Telegram.
-4. Тест: отправить фото боту, смотреть логи FastAPI и объекты в MinIO.
+**Вариант A: С Yandex Object Storage (рекомендуется)**
+
+1. Установить и настроить YC CLI (см. [docs/setup/yc-cli-setup.md](../docs/setup/yc-cli-setup.md))
+2. Создать бакет через CLI или PowerShell скрипт (см. [feature-2.5-yandex-s3.md](../../features/feature-2.5-yandex-s3.md))
+3. Настроить `.env` с параметрами Yandex Object Storage
+4. **`/webhook/telegram`:** приём сообщения, загрузка в S3, запрос в Replicate с `webhook: BASE_URL/webhook/replicate`
+5. **`/webhook/replicate`:** приём, чтение `tasks/{prediction_id}.json`, ответ в Telegram
+6. Тест: отправить фото боту, смотреть логи FastAPI и объекты в S3
+
+**Вариант B: С MinIO (для ранних этапов)**
+
+1. `docker-compose up minio` → создать бакет `ai-shtender-bucket` в `localhost:9001`
+2. **`/webhook/telegram`:** приём сообщения, загрузка в MinIO, запрос в Replicate с `webhook: BASE_URL/webhook/replicate`
+3. **`/webhook/replicate`:** приём, чтение `tasks/{prediction_id}.json`, ответ в Telegram
+4. Тест: отправить фото боту, смотреть логи FastAPI и объекты в MinIO

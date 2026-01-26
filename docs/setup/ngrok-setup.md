@@ -36,7 +36,7 @@ Telegram Bot API и Replicate API отправляют webhook-и на ваш с
 
 **Вариант 1: Корневой путь (рекомендуется для простоты)**
 ```bash
-curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://abc123.ngrok-free.app"
+curl "https://api.telegram.org/bot8326793362:AAE2ofAP2KOGSBRW1ody2VpiSXmmx1KUK6A/setWebhook?url=https://intercessional-willow-sententiously.ngrok-free.dev"
 ```
 
 **Вариант 2: С указанием пути**

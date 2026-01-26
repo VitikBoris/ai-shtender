@@ -1,6 +1,6 @@
 # 4. Архитектура данных (S3-as-DB)
 
-Бакет: из `S3_BUCKET` (например, `my-bot-bucket`).
+Бакет: из `S3_BUCKET` (например, `ai-shtender-bucket`).
 
 Цели:
 

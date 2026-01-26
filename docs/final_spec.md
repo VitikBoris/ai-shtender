@@ -24,7 +24,7 @@ Telegram Bot API.
 Replicate API.
 
 3. Архитектура данных (S3 Structure)
-В бакете (например, my-bot-bucket) используется следующая структура папок:
+В бакете (например, ai-shtender-bucket) используется следующая структура папок:
 
 images/input/
 

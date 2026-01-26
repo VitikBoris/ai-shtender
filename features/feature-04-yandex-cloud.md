@@ -14,7 +14,7 @@
 
    - Создать сервисный аккаунт с ролями: `storage.editor`, `serverless.functions.invoker`
    - Создать статический ключ доступа (Access Key ID и Secret Access Key)
-   - Создать бакет Object Storage с именем (например, `my-bot-bucket`)
+   - Создать бакет Object Storage с именем (например, `ai-shtender-bucket`)
    - Настроить lifecycle policy для `tasks/` (удаление файлов старше 1 дня)
    - Создать Lockbox секрет для токенов (опционально, или использовать переменные окружения функций)
 

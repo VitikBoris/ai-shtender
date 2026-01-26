@@ -46,7 +46,7 @@ ai-shtender/
 ```bash
 # Обязательные
 TG_BOT_TOKEN=your_telegram_bot_token
-S3_BUCKET=my-bot-bucket
+S3_BUCKET=ai-shtender-bucket
 S3_ENDPOINT_URL=http://minio:9000
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin

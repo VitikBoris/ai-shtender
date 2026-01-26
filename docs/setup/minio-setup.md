@@ -1,18 +1,16 @@
 # Настройка MinIO
 
+> **⚠️ УСТАРЕЛО:** Начиная с feature-2.5 рекомендуется использовать **Yandex Object Storage** вместо MinIO для локальной разработки. Это обеспечивает публичный доступ к presigned URL без необходимости в ngrok для MinIO и приближает окружение к production.
+>
+> **Рекомендуется:** См. [feature-2.5-yandex-s3.md](../../features/feature-2.5-yandex-s3.md) и [yandex-s3-setup.md](yandex-s3-setup.md) для инструкций по настройке Yandex Object Storage.
+>
+> Данная документация оставлена для тех, кто все еще использует MinIO на ранних этапах разработки.
+
 ## Автоматическая инициализация
 
 Бакет создается автоматически при первом запуске приложения через `s3_storage.get_s3_client()`.
 
-Также можно запустить скрипт вручную:
-
-```bash
-# Windows (PowerShell)
-python scripts/init_minio.py
-
-# Linux/Mac
-bash scripts/init_minio.sh
-```
+> **Примечание:** Скрипты `init_minio.py` и `init_minio.sh` были удалены в feature-2.5. Бакет создается автоматически при первом запуске приложения.
 
 ## Ручная настройка через консоль MinIO
 
@@ -29,7 +27,7 @@ bash scripts/init_minio.sh
 
 4. Создать бакет:
    - Нажать "Create Bucket"
-   - Имя бакета: `my-bot-bucket` (или значение из `S3_BUCKET` в `.env`)
+   - Имя бакета: `ai-shtender-bucket` (или значение из `S3_BUCKET` в `.env`)
    - Нажать "Create Bucket"
 
 ## Структура папок

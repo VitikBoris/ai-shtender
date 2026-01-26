@@ -17,6 +17,12 @@
 | Компонент   | Технология                                  |
 |-------------|---------------------------------------------|
 | HTTP-сервер | FastAPI (вместо Cloud Functions)            |
-| S3          | MinIO (эмулятор Object Storage)             |
-| Оркестрация | Docker Compose                              |
+| S3          | Yandex Object Storage (рекомендуется) или MinIO (эмулятор) |
+| CLI         | YC CLI (для работы с Yandex Cloud)          |
+| Оркестрация | Docker Compose (опционально, только для MinIO) |
 | Туннель     | ngrok (чтобы TG и Replicate видели localhost) |
+
+**Примечание:** Начиная с feature-2.5 рекомендуется использовать Yandex Object Storage вместо MinIO для локальной разработки. Это обеспечивает:
+- Публичный доступ к presigned URL без необходимости в ngrok для MinIO
+- Близость к production-окружению
+- Упрощение интеграции с реальным Replicate API

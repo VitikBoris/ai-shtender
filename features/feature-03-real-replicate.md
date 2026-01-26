@@ -20,6 +20,11 @@
    - Определить модель для обработки изображений (например, `sczhou/codeformer` для восстановления фото)
    - Документировать параметры модели в коде
 
+2.5. **Интеграция S3 с Yandex Object Storage**
+
+   - Выполнить задачи из [feature-2.5-yandex-s3.md](feature-2.5-yandex-s3.md)
+   - Убедиться, что presigned URL от Yandex Object Storage доступен из интернета (необходимо для Replicate)
+
 3. **Обновление кода для работы с Replicate API**
 
    - В `handler.py`: заменить вызов эмулятора на реальный Replicate API
@@ -44,16 +49,21 @@
    - Логирование для отладки
    - Обработка случая, когда `tasks/{prediction_id}.json` не найден в S3 (редкий кейс)
 
-5. **Обновление presigned URL для S3**
+5. **Проверка presigned URL для S3**
 
-   - Убедиться, что presigned URL доступен из интернета (необходимо для Replicate)
-   - Если используется локальный MinIO: настроить ngrok для MinIO или использовать публичный S3 для тестов
+   - Убедиться, что presigned URL от Yandex Object Storage доступен из интернета (необходимо для Replicate)
+   - Проверить, что URL имеет формат `https://storage.yandexcloud.net/bucket/key?...`
+   - Протестировать доступность URL из браузера или через `curl`
 
 ## Файлы
 
 - `handler.py` (обновлен)
 - `.env` (добавлен `REPLICATE_API_TOKEN`)
 - `requirements.txt` (добавлен `replicate` опционально, или использовать `requests`)
+
+## Предварительные требования
+
+- Выполнен [feature-2.5-yandex-s3.md](feature-2.5-yandex-s3.md) (интеграция S3 с Yandex Object Storage)
 
 ## Тестирование
 

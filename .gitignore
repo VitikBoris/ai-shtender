@@ -1,5 +1,8 @@
 # Environment variables
 .env
+.env.yc
+yc.env
+scripts/powershell/yc.env
 
 # Python
 __pycache__/

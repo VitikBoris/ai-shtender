@@ -1,5 +1,9 @@
 """
-Сервис для работы с S3 (MinIO): загрузка, скачивание, presigned URL, состояние задач.
+Сервис для работы с S3 (Yandex Object Storage / MinIO): загрузка, скачивание, presigned URL, состояние задач.
+
+Поддерживает:
+- Yandex Object Storage (рекомендуется, начиная с feature-2.5)
+- MinIO (альтернатива для ранних этапов разработки)
 """
 import json
 import logging
@@ -44,18 +48,21 @@ def get_s3_client() -> boto3.client:
         )
         
         # Проверка доступности и создание бакета при необходимости
+        # Примечание: для Yandex Object Storage создание бакета через boto3 может не работать
+        # (нужны специальные права). Бакет должен быть создан заранее через YC CLI.
         try:
             _s3_client.head_bucket(Bucket=config.S3_BUCKET)
             logger.info(f"Бакет {config.S3_BUCKET} доступен")
         except ClientError as e:
             error_code = e.response.get('Error', {}).get('Code', '')
             if error_code == '404':
-                logger.info(f"Бакет {config.S3_BUCKET} не найден, создаю...")
+                logger.info(f"Бакет {config.S3_BUCKET} не найден, пытаюсь создать...")
                 try:
                     _s3_client.create_bucket(Bucket=config.S3_BUCKET)
                     logger.info(f"Бакет {config.S3_BUCKET} создан")
                 except ClientError as create_error:
                     logger.error(f"Не удалось создать бакет: {create_error}")
+                    logger.warning("Для Yandex Object Storage создайте бакет через YC CLI: yc storage bucket create --name <bucket-name> --folder-id <folder-id>")
                     raise
             else:
                 logger.error(f"Ошибка при проверке бакета: {e}")

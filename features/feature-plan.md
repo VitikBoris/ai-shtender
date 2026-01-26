@@ -10,6 +10,10 @@
    → [feature-02-mock-replicate.md](feature-02-mock-replicate.md)  
    Коммит: не реализовано
 
+2.5. **Интеграция S3 с Yandex Object Storage** — перенос с MinIO на Yandex Object Storage  
+   → [feature-2.5-yandex-s3.md](feature-2.5-yandex-s3.md)  
+   Коммит: не реализовано
+
 3. **Интеграция с Replicate**  
    → [feature-03-real-replicate.md](feature-03-real-replicate.md)  
    Коммит: не реализовано
