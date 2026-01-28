@@ -33,6 +33,7 @@ class Config:
     
     # Replicate (опционально, для реального API)
     REPLICATE_API_TOKEN: Optional[str] = None
+    REPLICATE_MODEL_VERSION: Optional[str] = None
     
     # Лимиты
     MAX_IMAGE_MB: int = 10
@@ -61,6 +62,8 @@ class Config:
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
         self.MOCK_REPLICATE_URL = os.getenv("MOCK_REPLICATE_URL")
         self.REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
+        # В реальном Replicate API требуется именно version id модели
+        self.REPLICATE_MODEL_VERSION = os.getenv("REPLICATE_MODEL_VERSION")
         
         # Разбор ALLOWED_IMAGE_MIME
         mime_str = os.getenv("ALLOWED_IMAGE_MIME", "image/jpeg,image/png")

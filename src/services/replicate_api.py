@@ -87,6 +87,21 @@ async def create_prediction(
         data = response.json()
         logger.info(f"Prediction создан: {data.get('id')}, статус: {data.get('status')}")
         return data
+    except httpx.HTTPStatusError as e:
+        # make_request() делает raise_for_status(), поэтому сюда попадают 4xx/5xx
+        status = e.response.status_code
+        body_preview = ""
+        try:
+            # не всегда JSON
+            body_preview = e.response.text[:2000]
+        except Exception:
+            body_preview = "<unable to read body>"
+
+        logger.error(
+            "HTTP ошибка Replicate при создании prediction: "
+            f"status={status}, url={api_url}, body={body_preview}"
+        )
+        raise
     except Exception as e:
         error_msg = str(e)
         if "name resolution" in error_msg.lower() or "temporary failure" in error_msg.lower():

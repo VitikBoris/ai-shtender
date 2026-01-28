@@ -14,6 +14,15 @@
 | [08-configuration.md](08-configuration.md) | Переменные окружения, лимиты, MinIO/YC |
 | [09-prompts.md](09-prompts.md) | Промпты для ИИ-разработчика |
 
+## Статус реализации
+
+Короткий статус по тому, что уже реализовано в репозитории (а что пока остаётся как план).
+
+- **Feature 02 (mock Replicate)**: ✅ реализовано (локальная эмуляция Replicate; S3-as-DB).
+- **Feature 03 (real Replicate)**: ✅ реализовано (вызов `https://api.replicate.com/v1/predictions`, нужен `REPLICATE_API_TOKEN` и `REPLICATE_MODEL_VERSION`).
+- **Feature 2.5 (Yandex Object Storage)**: ✅ реализовано (использование YC Object Storage вместо локального MinIO).
+- **Feature 04 (Yandex Cloud serverless)**: ⏳ в плане (Cloud Functions + API Gateway).
+
 ## Гайды по установке
 
 Все гайды по установке и настройке инструментов находятся в [docs/setup/](../docs/setup/):

@@ -2,7 +2,8 @@
 
 План: [feature-plan.md](feature-plan.md)
 
-**Коммит:** не реализовано
+**Статус:** ✅ Реализовано  
+**Коммит:** [Реализация feature 02: интеграция с локальным эмулятором Replicate](http://github.com/VitikBoris/ai-shtender/commit/d5b131139767cd65be83cd0157c11dce3836bae3)
 
 ## Цель
 

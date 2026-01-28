@@ -2,7 +2,8 @@
 
 План: [feature-plan.md](feature-plan.md)
 
-**Коммит:** не реализовано
+**Статус:** ✅ Реализовано  
+**README:** [`README_FEATURE03.md`](../README_FEATURE03.md)
 
 ## Цель
 
@@ -27,20 +28,11 @@
 
 3. **Обновление кода для работы с Replicate API**
 
-   - В `handler.py`: заменить вызов эмулятора на реальный Replicate API
-     - Использовать `requests.post()` к `https://api.replicate.com/v1/predictions`
-     - Заголовки: `Authorization: Token {REPLICATE_API_TOKEN}`
-     - Тело запроса:
-       ```json
-       {
-         "version": "model_version_id",
-         "input": {"image": presigned_url, ...},
-         "webhook": "https://BASE_URL/webhook/replicate",
-         "webhook_events_filter": ["completed"]
-       }
-       ```
-
-   - `callback.py` остается без изменений (обрабатывает те же данные от Replicate)
+   - В проекте это реализовано в:
+     - `src/domain/logic.py` — создание prediction и сохранение состояния в S3
+     - `src/services/replicate_api.py` — вызов Replicate API / Mock Replicate
+     - `src/domain/logic.py` — обработка вебхука (аналог `callback.py`) и отправка результата пользователю
+   - Используется endpoint `https://api.replicate.com/v1/predictions` и поле `version` (нужен `REPLICATE_MODEL_VERSION`)
 
 4. **Обработка ошибок и edge cases**
 
@@ -57,9 +49,12 @@
 
 ## Файлы
 
-- `handler.py` (обновлен)
-- `.env` (добавлен `REPLICATE_API_TOKEN`)
-- `requirements.txt` (добавлен `replicate` опционально, или использовать `requests`)
+- `src/config.py` (добавлен `REPLICATE_MODEL_VERSION`)
+- `src/services/replicate_api.py` (real вызов + логирование HTTP ошибок)
+- `src/domain/logic.py` (передача model/version + сообщения об ошибках)
+- `docker-compose.yml` (`mock-replicate` сделан опциональным через профиль `mock`)
+- `README.md` (инструкции mock vs real)
+- `README_FEATURE03.md` (инструкции для пункта 3)
 
 ## Предварительные требования
 

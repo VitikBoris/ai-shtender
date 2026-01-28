@@ -7,6 +7,8 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 import mimetypes
 
+import httpx
+
 from src.config import config
 from src.domain.models import TaskState, TaskStatus, BotMode
 from src.services import s3_storage, telegram_api, replicate_api
@@ -154,9 +156,11 @@ async def process_telegram_image(
         webhook_url = f"{config.BASE_URL}/webhook/replicate"
         
         try:
+            # В real-режиме Replicate требует version id модели. В mock-режиме параметр игнорируется.
             prediction_response = await replicate_api.create_prediction(
                 image_url=presigned_url,
                 webhook_url=webhook_url,
+                model=config.REPLICATE_MODEL_VERSION,
                 webhook_events_filter=["completed"]
             )
             prediction_id = prediction_response.get("id")
@@ -166,10 +170,27 @@ async def process_telegram_image(
             
             logger.info(f"Prediction создан: {prediction_id}")
         except Exception as e:
-            logger.error(f"Ошибка при создании prediction: {e}")
+            # Более понятные сообщения для типовых ошибок реального Replicate
+            user_message = "Произошла ошибка при отправке задачи на обработку. Попробуйте позже."
+            if isinstance(e, ValueError):
+                # Например: не задан REPLICATE_API_TOKEN или REPLICATE_MODEL_VERSION
+                user_message = "Сервис обработки не настроен. Сообщите администратору (Replicate config)."
+            elif isinstance(e, httpx.HTTPStatusError):
+                status = e.response.status_code
+                if status in (401, 403):
+                    user_message = "Сервис обработки недоступен из‑за ошибки авторизации. Попробуйте позже."
+                elif status == 429:
+                    user_message = "Слишком много запросов к сервису обработки. Попробуйте чуть позже."
+                elif 500 <= status <= 599:
+                    user_message = "Сервис обработки временно недоступен. Попробуйте позже."
+
+            logger.error(
+                f"Ошибка при создании prediction (chat_id={chat_id}, user_id={user_id}): {e}",
+                exc_info=True
+            )
             await telegram_api.send_message(
                 chat_id,
-                "Произошла ошибка при отправке задачи на обработку. Попробуйте позже."
+                user_message
             )
             return
         
