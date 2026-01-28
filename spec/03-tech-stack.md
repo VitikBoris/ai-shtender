@@ -1,5 +1,10 @@
 # 3. Стек технологий
 
+## Статус
+
+- **Локально**: ✅ реализовано (FastAPI + S3-as-DB; поддерживаются real Replicate и mock-режим).
+- **Yandex Cloud (Production)**: ⏳ в плане (Serverless: Cloud Functions + API Gateway).
+
 ## Yandex Cloud (Production)
 
 | Компонент       | Технология              |
