@@ -38,7 +38,7 @@ class Config:
     # Лимиты
     MAX_IMAGE_MB: int = 10
     ALLOWED_IMAGE_MIME: List[str] = ["image/jpeg", "image/png"]
-    DEFAULT_MODE: str = "process_photo"
+    DEFAULT_MODE: str = "restoration"
     
     # Логирование
     LOG_LEVEL: str = "INFO"
@@ -58,7 +58,7 @@ class Config:
         self.S3_USE_SSL = self._get_bool("S3_USE_SSL", False)
         self.S3_PRESIGN_EXPIRES_SECONDS = self._get_int("S3_PRESIGN_EXPIRES_SECONDS", 3600)
         self.MAX_IMAGE_MB = self._get_int("MAX_IMAGE_MB", 10)
-        self.DEFAULT_MODE = os.getenv("DEFAULT_MODE", "process_photo")
+        self.DEFAULT_MODE = os.getenv("DEFAULT_MODE", "restoration")
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
         self.MOCK_REPLICATE_URL = os.getenv("MOCK_REPLICATE_URL")
         self.REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")

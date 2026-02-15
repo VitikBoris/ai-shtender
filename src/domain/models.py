@@ -18,6 +18,10 @@ class TaskStatus(str, Enum):
 
 class BotMode(str, Enum):
     """Режимы работы бота."""
+    RESTORATION = "restoration"
+    UPSCALE = "upscale"
+    FRAME_VETERAN = "frame_veteran"
+    # Обратная совместимость со старыми значениями в S3
     PROCESS_PHOTO = "process_photo"
     FRAME = "frame"
 
@@ -28,7 +32,7 @@ class TaskState(BaseModel):
     prediction_id: str = Field(..., description="ID предсказания от Replicate")
     chat_id: int = Field(..., description="ID чата в Telegram")
     user_id: int = Field(..., description="ID пользователя в Telegram")
-    mode: BotMode = Field(default=BotMode.PROCESS_PHOTO, description="Режим обработки")
+    mode: BotMode = Field(default=BotMode.RESTORATION, description="Режим обработки")
     input_s3_key: str = Field(..., description="Ключ входного изображения в S3")
     status: TaskStatus = Field(default=TaskStatus.QUEUED, description="Текущий статус")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Время создания")

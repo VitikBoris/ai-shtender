@@ -1,0 +1,38 @@
+openapi: "3.0.0"
+info:
+  title: ai-shtender
+  version: "1.0.0"
+paths:
+  /webhook/telegram:
+    post:
+      summary: Telegram webhook
+      operationId: telegramWebhook
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        # Эти значения подставляет deploy-yc-apigw.ps1
+        function_id: "<FN_TELEGRAM_ID>"
+        service_account_id: "<SERVICE_ACCOUNT_ID>"
+  /webhook/replicate:
+    post:
+      summary: Replicate webhook
+      operationId: replicateWebhook
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        # Эти значения подставляет deploy-yc-apigw.ps1
+        function_id: "<FN_REPLICATE_ID>"
+        service_account_id: "<SERVICE_ACCOUNT_ID>"
+

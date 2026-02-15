@@ -3,6 +3,8 @@
 .env.yc
 yc.env
 scripts/powershell/yc.env
+yc.secrets.env
+scripts/powershell/yc.secrets.env
 
 # Python
 __pycache__/
@@ -43,3 +45,7 @@ temp_image.jpg
 
 # User uploaded images (temporary)
 user_photo_*.jpg
+
+# Yandex Cloud build artifacts
+.yc/
+*.zip

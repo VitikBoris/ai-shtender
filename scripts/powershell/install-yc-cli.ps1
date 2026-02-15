@@ -1,4 +1,4 @@
-# Скрипт установки Yandex Cloud CLI для Windows
+﻿# Скрипт установки Yandex Cloud CLI для Windows
 # Использование: .\install-yc-cli.ps1
 
 Write-Host "Установка Yandex Cloud CLI..." -ForegroundColor Green

@@ -26,16 +26,18 @@
 
 #### 2) `/menu`
 
-- Показать InlineKeyboard:
-  - «Обработка фото» (`mode=process_photo`);
-  - «Рамка» (`mode=frame`).
-- При выборе кнопки: сохранить режим в `users/{chat_id}.json`, ответить подтверждением.
+- Показать InlineKeyboard с четырьмя кнопками:
+  - «Очень хорошая детальная реставрация» (`mode=restoration`);
+  - «Просто апскейл» (`mode=upscale`);
+  - «Только рамка (стиль ветерана)» (`mode=frame_veteran`);
+  - «Назад» (`action=back`).
+- Рекомендуемая раскладка: три кнопки режимов + кнопка «Назад» отдельным рядом.
 
 #### 3) CallbackQuery (нажатие кнопок меню)
 
 - Прочитать `callback_query.data`.
-- Обновить `users/{chat_id}.json`.
-- Ответить `answerCallbackQuery` (чтобы Telegram убрал «часики»).
+- **Если `action=back`:** вызвать `answerCallbackQuery`, закрыть меню (убрать клавиатуру через `editMessageReplyMarkup` или удалить сообщение). Режим не менять.
+- **Если `mode=restoration` | `mode=upscale` | `mode=frame_veteran`:** вызвать `answerCallbackQuery`, сохранить режим в `users/{chat_id}.json`, отправить подтверждение («Выбран режим: …»).
 
 #### 4) Пользователь прислал фото (`message.photo`)
 
@@ -47,9 +49,10 @@
 - Загрузить в S3: `images/input/.../{uuid}.jpg` (+ `Content-Type`).
 - Получить presigned URL (GET, TTL например 1 ч).
 - Определить текущий режим:
-  - прочитать `users/{chat_id}.json`; если нет — дефолт `process_photo`.
+  - прочитать `users/{chat_id}.json`; если нет — дефолт (например, `restoration`).
+  - режим передаётся в Replicate: выбор модели/версии и параметров `input` в зависимости от режима (`restoration`, `upscale`, `frame_veteran`).
 - Создать prediction в Replicate:
-  - `POST /predictions` с `model`/`version` и `input` (`image=presigned_url` + параметры режима);
+  - `POST /predictions` с `model`/`version` и `input` (`image=presigned_url` + параметры по выбранному режиму);
   - `webhook = BASE_URL/webhook/replicate`;
   - `webhook_events_filter = ["completed"]`.
 - Сохранить стейт:

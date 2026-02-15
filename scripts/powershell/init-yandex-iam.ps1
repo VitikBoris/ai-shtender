@@ -1,4 +1,4 @@
-# Конфигурация Yandex Cloud для скриптов PowerShell
+﻿# Конфигурация Yandex Cloud для скриптов PowerShell
 # Скопируйте этот файл в yc.env и заполните своими значениями
 # 
 # ВАЖНО: Не коммитьте yc.env в git. Секреты храните в yc.secrets.env!

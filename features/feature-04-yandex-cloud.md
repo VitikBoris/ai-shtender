@@ -2,7 +2,8 @@
 
 План: [feature-plan.md](feature-plan.md)
 
-**Коммит:** не реализовано
+**Статус:** ✅ Реализовано  
+**Коммит:** см. [README_FEATURE04.md](../README_FEATURE04.md)
 
 ## Цель
 

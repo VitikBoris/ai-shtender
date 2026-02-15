@@ -149,8 +149,13 @@ async def process_telegram_image(
             expires_in=config.S3_PRESIGN_EXPIRES_SECONDS
         )
         
-        # Определить режим (пока используем дефолтный)
-        mode = BotMode(config.DEFAULT_MODE)
+        # Определить режим: из users/{chat_id}.json или дефолт из конфига
+        user_state = s3_storage.load_user_state(chat_id)
+        mode_str = (user_state or {}).get("mode") or config.DEFAULT_MODE
+        try:
+            mode = BotMode(mode_str)
+        except ValueError:
+            mode = BotMode(config.DEFAULT_MODE)
         
         # Создать prediction в Mock Replicate
         webhook_url = f"{config.BASE_URL}/webhook/replicate"

@@ -1,4 +1,4 @@
-# Скрипт инициализации Yandex Object Storage
+﻿# Скрипт инициализации Yandex Object Storage
 # Использование: .\init-yandex-s3.ps1 -BucketName "ai-shtender-bucket" -FolderId "your-folder-id"
 # Или создайте файл yc.env с переменными YC_FOLDER_ID и YC_BUCKET_NAME
 

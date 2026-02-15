@@ -16,12 +16,14 @@
 
 ## Статус реализации
 
-Короткий статус по тому, что уже реализовано в репозитории (а что пока остаётся как план).
+Короткий статус по тому, что уже реализовано в репозитории (а что пока остаётся как план). План фич: [features/feature-plan.md](../features/feature-plan.md).
 
+- **Feature 01 (локальный бот)**: ✅ реализовано (`/start`, отправка фото → то же фото).
 - **Feature 02 (mock Replicate)**: ✅ реализовано (локальная эмуляция Replicate; S3-as-DB).
-- **Feature 03 (real Replicate)**: ✅ реализовано (вызов `https://api.replicate.com/v1/predictions`, нужен `REPLICATE_API_TOKEN` и `REPLICATE_MODEL_VERSION`).
 - **Feature 2.5 (Yandex Object Storage)**: ✅ реализовано (использование YC Object Storage вместо локального MinIO).
-- **Feature 04 (Yandex Cloud serverless)**: ⏳ в плане (Cloud Functions + API Gateway).
+- **Feature 03 (real Replicate)**: ✅ реализовано (вызов `https://api.replicate.com/v1/predictions`, нужен `REPLICATE_API_TOKEN` и `REPLICATE_MODEL_VERSION`).
+- **Feature 04 (Yandex Cloud serverless)**: ✅ реализовано (Cloud Functions + API Gateway).
+- **Feature 05 (/menu)**: ⏳ не реализовано (меню с четырьмя вариантами и кнопка «Назад»).
 
 ## Гайды по установке
 

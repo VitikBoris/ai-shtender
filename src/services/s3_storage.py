@@ -214,16 +214,58 @@ def load_task_state(prediction_id: str) -> Optional[dict]:
         raise
 
 
+def load_user_state(chat_id: int) -> Optional[dict]:
+    """
+    Загрузить состояние пользователя из S3 (users/{chat_id}.json).
+
+    Args:
+        chat_id: ID чата Telegram
+
+    Returns:
+        Словарь с состоянием (например {"mode": "restoration"}) или None
+    """
+    key = f"users/{chat_id}.json"
+    try:
+        data = download_from_s3(bucket=config.S3_BUCKET, key=key)
+        state = json.loads(data.decode("utf-8"))
+        return state
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code", "")
+        if error_code == "NoSuchKey":
+            return None
+        logger.error(f"Ошибка при загрузке состояния пользователя {chat_id}: {e}")
+        raise
+
+
+def save_user_state(chat_id: int, state: dict) -> None:
+    """
+    Сохранить состояние пользователя в S3 (users/{chat_id}.json).
+
+    Args:
+        chat_id: ID чата Telegram
+        state: Словарь с состоянием (например {"mode": "restoration"})
+    """
+    key = f"users/{chat_id}.json"
+    json_data = json.dumps(state, ensure_ascii=False, indent=2)
+    upload_to_s3(
+        bucket=config.S3_BUCKET,
+        key=key,
+        data=json_data.encode("utf-8"),
+        content_type="application/json; charset=utf-8",
+    )
+    logger.info(f"Состояние пользователя сохранено: users/{chat_id}.json")
+
+
 def delete_object(bucket: str, key: str) -> None:
     """
     Удалить объект из S3.
-    
+
     Args:
         bucket: Имя бакета
         key: Ключ (путь) объекта
     """
     client = get_s3_client()
-    
+
     try:
         client.delete_object(Bucket=bucket, Key=key)
         logger.info(f"Объект удален из S3: {bucket}/{key}")

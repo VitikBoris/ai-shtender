@@ -46,6 +46,20 @@ yc resource-manager folder list
 .\init-yandex-s3.ps1 -BucketName "ai-shtender-bucket" -FolderId "b1g2h3j4k5l6m7n8"
 ```
 
+### Скрипты для Feature 04 (Yandex Cloud)
+
+Полное описание — в [README_FEATURE04.md](../../README_FEATURE04.md).
+
+| Скрипт | Назначение |
+|--------|------------|
+| `init-yc-iam.ps1` | Создать сервисный аккаунт и назначить роли на каталог (идемпотентно) |
+| `deploy-yc-functions.ps1` | Собрать ZIP и задеплоить Cloud Functions `fn-handler`, `fn-callback` |
+| `deploy-yc-apigw.ps1` | Создать/обновить API Gateway из `openapi.yaml` |
+| `set-telegram-webhook.ps1` | Установить webhook Telegram на URL API Gateway |
+| `smoke-test.ps1` | Проверить доступность эндпоинтов API Gateway |
+
+Конфигурация: `yc.env` (несекретное) и `yc.secrets.env` (токены/ключи). Шаблоны: `yc.env.example`, `yc.secrets.env.example`.
+
 ### check-env.ps1
 
 Проверка переменных окружения, необходимых для работы проекта.
@@ -84,6 +98,7 @@ yc resource-manager folder list
 
 - PowerShell 5.1 или выше
 - Для скриптов работы с YC CLI: установленный и настроенный YC CLI (см. [docs/setup/yc-cli-setup.md](../../docs/setup/yc-cli-setup.md))
+- **Кодировка файлов:** все `*.ps1` должны быть в **UTF-8 с BOM** (см. [spec/03-tech-stack.md](../../spec/03-tech-stack.md)); иначе кириллица в комментариях и строках может отображаться некорректно в Windows.
 
 ## Разрешения
 
