@@ -175,5 +175,6 @@ AWS_SECRET_ACCESS_KEY=...
 ## Связанные документы
 
 - [features/feature-04-yandex-cloud.md](features/feature-04-yandex-cloud.md) — описание задач пункта 4
+- [features/feature-04.5-shtender-pdf.md](features/feature-04.5-shtender-pdf.md) — пункт 4.5: генерация штендера (PDF)
 - [features/feature-2.5-yandex-s3.md](features/feature-2.5-yandex-s3.md) — Object Storage
 - [docs/setup/yc-cli-setup.md](docs/setup/yc-cli-setup.md) — установка и настройка YC CLI

@@ -1,7 +1,10 @@
 """
 Бизнес-логика обработки фото и вебхуков.
 """
+import asyncio
+import os
 import uuid
+import tempfile
 import logging
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -78,6 +81,70 @@ async def process_telegram_image(
         # Скачать файл
         file_data = await telegram_api.download_file(file_path)
         
+        # Режим из меню (users/{chat_id}.json)
+        user_state = s3_storage.load_user_state(chat_id)
+        user_mode = (user_state or {}).get("mode", config.DEFAULT_MODE)
+        
+        # Режим «Создание штендера»: только детекция лица + PDF, без Replicate
+        if user_mode == BotMode.SHTENDER.value:
+            try:
+                from src.services.shtender import build_shtender_pdf, FaceNotFoundError
+            except ImportError:
+                await telegram_api.send_message(
+                    chat_id,
+                    "Режим «Создание штендера» в облачной версии недоступен. Выберите «Детализация» и отправьте фото.",
+                )
+                return
+            template_path = config.SHTENDER_TEMPLATE_PATH
+            if not os.path.isfile(template_path):
+                await telegram_api.send_message(
+                    chat_id,
+                    "Шаблон штендера не найден. Обратитесь к администратору.",
+                )
+                return
+            ext = ".jpg"
+            if file_name and file_name.lower().endswith(".png"):
+                ext = ".png"
+            elif file_path and file_path.lower().endswith(".png"):
+                ext = ".png"
+            try:
+                with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+                    tmp.write(file_data)
+                    tmp_path = tmp.name
+                try:
+                    pdf_bytes = await asyncio.to_thread(
+                        build_shtender_pdf,
+                        template_path,
+                        tmp_path,
+                    )
+                    await telegram_api.send_message(chat_id, "✅ Готово! Отправляю штендер...")
+                    await telegram_api.send_document_bytes(
+                        chat_id=chat_id,
+                        document=pdf_bytes,
+                        filename="shtender.pdf",
+                        caption="Штендер",
+                        content_type="application/pdf",
+                    )
+                    logger.info("Штендер (PDF) отправлен пользователю %s (режим shtender)", chat_id)
+                finally:
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
+            except FaceNotFoundError:
+                await telegram_api.send_message(
+                    chat_id,
+                    "На фото не обнаружено лицо. Отправьте фото, где чётко видно лицо — тогда можно будет сформировать штендер.",
+                )
+                logger.info("Штендер не создан: лицо не найдено для %s", chat_id)
+            except Exception as shtender_err:
+                logger.warning("Не удалось сгенерировать штендер: %s", shtender_err, exc_info=True)
+                await telegram_api.send_message(
+                    chat_id,
+                    "❌ Не удалось создать штендер. Попробуйте другое фото.",
+                )
+            return
+        
         # Определить MIME-тип (если не передан)
         if not mime_type:
             # Сначала попробовать из file_name (для документов)
@@ -149,13 +216,11 @@ async def process_telegram_image(
             expires_in=config.S3_PRESIGN_EXPIRES_SECONDS
         )
         
-        # Определить режим: из users/{chat_id}.json или дефолт из конфига
-        user_state = s3_storage.load_user_state(chat_id)
-        mode_str = (user_state or {}).get("mode") or config.DEFAULT_MODE
+        # Режим обработки — из меню (user_state) или конфиг по умолчанию
         try:
-            mode = BotMode(mode_str)
+            mode = BotMode(user_mode)
         except ValueError:
-            mode = BotMode(config.DEFAULT_MODE)
+            mode = BotMode.RESTORATION
         
         # Создать prediction в Mock Replicate
         webhook_url = f"{config.BASE_URL}/webhook/replicate"
@@ -382,6 +447,45 @@ async def process_replicate_webhook(webhook_data: Dict[str, Any]) -> None:
                     caption="✅ Обработка завершена!"
                 )
                 logger.info(f"Результат отправлен пользователю {task_state.chat_id}")
+
+                # Сгенерировать штендер (PDF), если доступен (в облаке opencv не ставим — пропускаем)
+                build_shtender_pdf_fn = None
+                try:
+                    from src.services.shtender import build_shtender_pdf as build_shtender_pdf_fn, FaceNotFoundError
+                except ImportError:
+                    logger.debug("Штендер недоступен (opencv не установлен)")
+                template_path = config.SHTENDER_TEMPLATE_PATH
+                if build_shtender_pdf_fn and os.path.isfile(template_path):
+                    try:
+                        pdf_bytes = await asyncio.to_thread(
+                            build_shtender_pdf_fn,
+                            template_path,
+                            output_url,
+                        )
+                        await telegram_api.send_document_bytes(
+                            chat_id=task_state.chat_id,
+                            document=pdf_bytes,
+                            filename="shtender.pdf",
+                            caption="Штендер",
+                            content_type="application/pdf",
+                        )
+                        logger.info("Штендер (PDF) отправлен пользователю %s", task_state.chat_id)
+                    except FaceNotFoundError:
+                        await telegram_api.send_message(
+                            task_state.chat_id,
+                            "На фото не обнаружено лицо. Отправьте фото, где чётко видно лицо — тогда можно будет сформировать штендер.",
+                        )
+                        logger.info("Штендер не создан: лицо не найдено для %s", task_state.chat_id)
+                    except Exception as shtender_err:
+                        logger.warning(
+                            "Не удалось сгенерировать штендер: %s",
+                            shtender_err,
+                            exc_info=True,
+                        )
+                elif not build_shtender_pdf_fn:
+                    logger.debug("Шаблон штендера не генерируется в облаке (нет opencv)")
+                else:
+                    logger.debug("Шаблон штендера не найден: %s", template_path)
         
         elif status == "failed":
             error_info = webhook_data.get("error", "Неизвестная ошибка")

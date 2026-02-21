@@ -6,6 +6,7 @@
 
 - [Пункт 1: Локальный бот с базовыми командами](#пункт-1-локальный-бот-с-базовыми-командами)
 - [Feature 02: Mock Replicate Integration](#feature-02-mock-replicate-integration)
+- [План фич и Feature 4.5 (штендер PDF)](features/feature-plan.md)
 
 ---
 
@@ -358,6 +359,8 @@ docker-compose ps minio
 
 ## Документация
 
+- [План фич (Feature 01–4.5, 05)](features/feature-plan.md)
+- [Feature 4.5: Штендер PDF](features/feature-04.5-shtender-pdf.md) — генерация штендера по шаблону с детекцией лица
 - [Настройка MinIO](docs/setup/minio-setup.md)
 - [Настройка ngrok](docs/setup/ngrok-setup.md)
 - [Установка Docker и Docker Compose](docs/setup/docker-compose-install.md)

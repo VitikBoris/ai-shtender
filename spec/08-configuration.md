@@ -69,6 +69,7 @@
 |------------|------------|--------|
 | `DEFAULT_MODE` | Режим по умолчанию | `process_photo` |
 | `LOG_LEVEL` | Уровень логов | `INFO` |
+| `SHTENDER_TEMPLATE_PATH` | (Feature 4.5) Путь к PNG-шаблону штендера | `assets/shtender_template.png` |
 
 ---
 

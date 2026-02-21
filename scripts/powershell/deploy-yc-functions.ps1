@@ -161,6 +161,11 @@ Copy-Item -Recurse -Force (Join-Path $repoRoot "src") (Join-Path $buildDir "src"
 Copy-Item -Force (Join-Path $repoRoot "handler.py") (Join-Path $buildDir "handler.py")
 Copy-Item -Force (Join-Path $repoRoot "callback.py") (Join-Path $buildDir "callback.py")
 Copy-Item -Force (Join-Path $repoRoot "requirements.functions.txt") (Join-Path $buildDir "requirements.txt")
+# Шаблон штендера (режим «Создание штендера»)
+$assetsSrc = Join-Path $repoRoot "assets"
+if (Test-Path $assetsSrc) {
+    Copy-Item -Recurse -Force $assetsSrc (Join-Path $buildDir "assets")
+}
 
 Write-Host "Artifact ready: $buildDir" -ForegroundColor Green
 
@@ -256,13 +261,79 @@ function Deploy-Version([string]$fnName, [string]$entrypoint, [string]$runtime, 
     return $ver
 }
 
-# Ensure functions exist and deploy
+function Deploy-Version-FromPackage([string]$fnName, [string]$entrypoint, [string]$runtime, [string]$pkgBucket, [string]$pkgObject, [string]$pkgSha256, [string]$saId, [string[]]$envVars) {
+    Write-Host "`nDeploying version for '$fnName' (from Object Storage)..." -ForegroundColor Yellow
+    $envArgs = @()
+    foreach ($e in $envVars) {
+        $envArgs += "--environment"
+        $envArgs += $e
+    }
+    $allArgs = @(
+        "serverless", "function", "version", "create",
+        "--function-name", $fnName,
+        "--runtime", $runtime,
+        "--entrypoint", $entrypoint,
+        "--memory", "256m",
+        "--execution-timeout", "30s",
+        "--service-account-id", $saId,
+        "--package-bucket-name", $pkgBucket,
+        "--package-object-name", $pkgObject,
+        "--package-sha256", $pkgSha256,
+        "--format", "json"
+    ) + $envArgs
+    $prevEA = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $out = & yc @allArgs 2>&1
+    } finally {
+        $ErrorActionPreference = $prevEA
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw ("Failed to deploy version of ${fnName}: " + ($out -join "`n"))
+    }
+    $text = $out -join "`n"
+    $m = [regex]::Match($text, '\{.*\}', [System.Text.RegularExpressions.RegexOptions]::Singleline)
+    if (-not $m.Success) { throw ("Could not extract JSON from yc (version create) for ${fnName}: " + $text) }
+    $ver = $m.Value | ConvertFrom-Json
+    Write-Host "Version deployed: id=$($ver.id)" -ForegroundColor Green
+    return $ver
+}
+
+# Upload package to Object Storage (package > 3.5 MB — required for opencv + assets)
+$pkgKey = "deploy/package.zip"
+Write-Host "`nZipping and uploading package to s3://$bucketName/$pkgKey ..." -ForegroundColor Yellow
+$env:AWS_ACCESS_KEY_ID = $awsAccessKeyId
+$env:AWS_SECRET_ACCESS_KEY = $awsSecretAccessKey
+$uploadScript = Join-Path $repoRoot "scripts\upload_package.py"
+if (-not (Test-Path $uploadScript)) {
+    Write-Host "ERROR: $uploadScript not found" -ForegroundColor Red
+    exit 1
+}
+# boto3 needed for S3 upload
+$prevEA = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+pip install --quiet boto3 2>$null
+$ErrorActionPreference = $prevEA
+$pkgSha256 = & python $uploadScript --build-dir $buildDir --bucket $bucketName --key $pkgKey 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Upload error: $pkgSha256" -ForegroundColor Red
+    exit 1
+}
+$pkgSha256 = ($pkgSha256 | Select-Object -Last 1).Trim()
+if (-not $pkgSha256 -or $pkgSha256.Length -ne 64) {
+    Write-Host "ERROR: upload script did not return sha256 (got: $pkgSha256)" -ForegroundColor Red
+    exit 1
+}
+Write-Host "Package uploaded, sha256=$pkgSha256" -ForegroundColor Green
+
+# Ensure functions exist and deploy from package
 try {
     $fnTelegram = Ensure-Function -fnName $fnTelegramName -folderId $folderId
     $fnReplicate = Ensure-Function -fnName $fnReplicateName -folderId $folderId
 
-    $null = Deploy-Version -fnName $fnTelegramName -entrypoint "handler.handler" -runtime $runtime -sourcePath $buildDir -saId $saId -envVars $envVars
-    $null = Deploy-Version -fnName $fnReplicateName -entrypoint "callback.handler" -runtime $runtime -sourcePath $buildDir -saId $saId -envVars $envVars
+    $null = Deploy-Version-FromPackage -fnName $fnTelegramName -entrypoint "handler.handler" -runtime $runtime -pkgBucket $bucketName -pkgObject $pkgKey -pkgSha256 $pkgSha256 -saId $saId -envVars $envVars
+    $null = Deploy-Version-FromPackage -fnName $fnReplicateName -entrypoint "callback.handler" -runtime $runtime -pkgBucket $bucketName -pkgObject $pkgKey -pkgSha256 $pkgSha256 -saId $saId -envVars $envVars
 } catch {
     Write-Host "Deploy error: $_" -ForegroundColor Red
     exit 1

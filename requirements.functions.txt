@@ -1,5 +1,9 @@
+# Зависимости для Yandex Cloud Functions (fn-handler, fn-callback)
+# Пакет > 3.5 MB — деплой через Object Storage (scripts/upload_package.py + deploy-yc-functions.ps1)
+
 boto3>=1.29.0
 httpx>=0.25.0
 pydantic>=2.0.0
 python-dotenv>=1.0.0
-
+Pillow>=10.0.0
+opencv-python-headless>=4.8.0

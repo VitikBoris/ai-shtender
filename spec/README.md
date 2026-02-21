@@ -9,7 +9,7 @@
 | [03-tech-stack.md](03-tech-stack.md) | Стек: Yandex Cloud и локально (FastAPI, MinIO) |
 | [04-s3-data.md](04-s3-data.md) | S3: images/, tasks/, users/, JSON, Lifecycle, идемпотентность |
 | [05-api-endpoints.md](05-api-endpoints.md) | Эндпоинты, маршрутизация |
-| [06-handlers.md](06-handlers.md) | Логика fn-handler и fn-callback, /menu, retry, безопасность |
+| [06-handlers.md](06-handlers.md) | Логика fn-handler и fn-callback, retry, безопасность |
 | [07-local-dev.md](07-local-dev.md) | Локальная разработка: Docker, MinIO, ngrok, структура кода |
 | [08-configuration.md](08-configuration.md) | Переменные окружения, лимиты, MinIO/YC |
 | [09-prompts.md](09-prompts.md) | Промпты для ИИ-разработчика |
@@ -23,7 +23,7 @@
 - **Feature 2.5 (Yandex Object Storage)**: ✅ реализовано (использование YC Object Storage вместо локального MinIO).
 - **Feature 03 (real Replicate)**: ✅ реализовано (вызов `https://api.replicate.com/v1/predictions`, нужен `REPLICATE_API_TOKEN` и `REPLICATE_MODEL_VERSION`).
 - **Feature 04 (Yandex Cloud serverless)**: ✅ реализовано (Cloud Functions + API Gateway).
-- **Feature 05 (/menu)**: ⏳ не реализовано (меню с четырьмя вариантами и кнопка «Назад»).
+- **Feature 4.5 (штендер PDF)**: ✅ реализовано (детекция лица, вставка в шаблон, PDF; при отсутствии лица — сообщение пользователю).
 
 ## Гайды по установке
 

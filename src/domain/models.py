@@ -18,7 +18,8 @@ class TaskStatus(str, Enum):
 
 class BotMode(str, Enum):
     """Режимы работы бота."""
-    RESTORATION = "restoration"
+    RESTORATION = "restoration"  # Детализация (обработка фото через Replicate)
+    SHTENDER = "shtender"        # Создание штендера (лицо + PDF)
     UPSCALE = "upscale"
     FRAME_VETERAN = "frame_veteran"
     # Обратная совместимость со старыми значениями в S3

@@ -35,6 +35,9 @@ class Config:
     REPLICATE_API_TOKEN: Optional[str] = None
     REPLICATE_MODEL_VERSION: Optional[str] = None
     
+    # Штендер
+    SHTENDER_TEMPLATE_PATH: str = "assets/shtender_template.png"
+
     # Лимиты
     MAX_IMAGE_MB: int = 10
     ALLOWED_IMAGE_MIME: List[str] = ["image/jpeg", "image/png"]
@@ -64,7 +67,8 @@ class Config:
         self.REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
         # В реальном Replicate API требуется именно version id модели
         self.REPLICATE_MODEL_VERSION = os.getenv("REPLICATE_MODEL_VERSION")
-        
+        self.SHTENDER_TEMPLATE_PATH = os.getenv("SHTENDER_TEMPLATE_PATH", "assets/shtender_template.png")
+
         # Разбор ALLOWED_IMAGE_MIME
         mime_str = os.getenv("ALLOWED_IMAGE_MIME", "image/jpeg,image/png")
         self.ALLOWED_IMAGE_MIME = [m.strip() for m in mime_str.split(",")]

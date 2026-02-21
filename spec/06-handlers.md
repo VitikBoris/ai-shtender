@@ -17,29 +17,24 @@
 
 **Вход:** JSON Update от Telegram (`message` / `callback_query`).
 
-### Поддерживаемые сценарии (MVP + /menu)
+### Поддерживаемые сценарии (MVP)
 
 #### 1) `/start`
 
-- Отправить приветствие и краткую инструкцию.
-- (Опционально) установить режим по умолчанию в `users/{chat_id}.json`.
+- Отправить приветствие и краткую инструкцию (в т.ч. про /menu).
 
 #### 2) `/menu`
 
-- Показать InlineKeyboard с четырьмя кнопками:
-  - «Очень хорошая детальная реставрация» (`mode=restoration`);
-  - «Просто апскейл» (`mode=upscale`);
-  - «Только рамка (стиль ветерана)» (`mode=frame_veteran`);
-  - «Назад» (`action=back`).
-- Рекомендуемая раскладка: три кнопки режимов + кнопка «Назад» отдельным рядом.
+- Отправить сообщение с **InlineKeyboard** и двумя кнопками:
+  - **Детализация** — режим обработки фото через Replicate (реставрация).
+  - **Создание штендера** — режим: только детекция лица и генерация PDF-штендера (без Replicate).
+  - Кнопка **« Назад»** — убрать клавиатуру (editMessageReplyMarkup с пустым `inline_keyboard`).
+- При нажатии на режим: `answerCallbackQuery`, сохранить режим в S3 `users/{chat_id}.json` (поле `mode`: `restoration` или `shtender`), отправить подтверждение.
+- При нажатии «Назад»: `answerCallbackQuery`, убрать кнопки у сообщения с меню.
 
-#### 3) CallbackQuery (нажатие кнопок меню)
+**callback_data:** `mode=detailization` → сохранять `mode: "restoration"`; `mode=shtender` → `mode: "shtender"`; `action=back` → закрыть меню.
 
-- Прочитать `callback_query.data`.
-- **Если `action=back`:** вызвать `answerCallbackQuery`, закрыть меню (убрать клавиатуру через `editMessageReplyMarkup` или удалить сообщение). Режим не менять.
-- **Если `mode=restoration` | `mode=upscale` | `mode=frame_veteran`:** вызвать `answerCallbackQuery`, сохранить режим в `users/{chat_id}.json`, отправить подтверждение («Выбран режим: …»).
-
-#### 4) Пользователь прислал фото (`message.photo`)
+#### 3) Пользователь прислал фото (`message.photo`)
 
 - Выбрать самое большое `photo_size` (последний элемент массива обычно максимальный).
 - Скачать файл из Telegram:
@@ -48,21 +43,18 @@
 - Проверить mime и размер (ограничения из конфига).
 - Загрузить в S3: `images/input/.../{uuid}.jpg` (+ `Content-Type`).
 - Получить presigned URL (GET, TTL например 1 ч).
-- Определить текущий режим:
-  - прочитать `users/{chat_id}.json`; если нет — дефолт (например, `restoration`).
-  - режим передаётся в Replicate: выбор модели/версии и параметров `input` в зависимости от режима (`restoration`, `upscale`, `frame_veteran`).
+- Режим обработки — из S3 `users/{chat_id}.json` (поле `mode`). Если нет — по умолчанию `restoration`. Режим `shtender`: фото не отправляется в Replicate — скачивается, строится штендер (лицо + PDF) и отправляется пользователю; при отсутствии лица — сообщение «На фото не обнаружено лицо…».
 - Создать prediction в Replicate:
-  - `POST /predictions` с `model`/`version` и `input` (`image=presigned_url` + параметры по выбранному режиму);
+  - `POST /predictions` с `model`/`version` и `input` (`image=presigned_url`);
   - `webhook = BASE_URL/webhook/replicate`;
   - `webhook_events_filter = ["completed"]`.
 - Сохранить стейт:
   - `tasks/{prediction_id}.json` (`chat_id`, `user_id`, `input_s3_key`, `mode`, `created_at`, `message_id`, модель).
 - Ответить пользователю: «Принял. Обрабатываю…» (`sendMessage`).
 
-#### 5) Текст без фото
+#### 4) Текст без фото
 
-- Если ожидаем фото: подсказать «Пришлите фото».
-- Иначе: показать `/menu`.
+- Подсказать «Пришлите фото».
 
 ---
 
@@ -81,7 +73,8 @@
    - **`succeeded`**:
      - из `output`: если массив — первый URL; если строка — использовать её;
      - (опционально) скачать output и сохранить в `images/output/.../{prediction_id}.jpg`;
-     - отправить в Telegram: `sendPhoto` (по URL или по загруженному файлу).
+     - отправить в Telegram: `sendPhoto` (по URL или по загруженному файлу);
+     - (Feature 4.5) при наличии шаблона штендера: сгенерировать PDF (детекция лица, вставка в шаблон) и отправить `sendDocument`; если лицо не найдено — отправить сообщение пользователю, PDF не создавать.
    - **`failed`**:
      - отправить `sendMessage` с текстом ошибки (без технических секретов).
    - прочие (`processing`, `canceled`) — лог и 200 OK.

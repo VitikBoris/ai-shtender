@@ -241,6 +241,61 @@ async def get_file_info(file_id: str) -> Dict[str, Any]:
         raise
 
 
+async def answer_callback_query(
+    callback_query_id: str,
+    text: Optional[str] = None,
+    show_alert: bool = False,
+) -> Dict[str, Any]:
+    """
+    Ответить на callback_query (убрать «часики» у кнопки).
+
+    Args:
+        callback_query_id: ID callback от Telegram
+        text: Краткое уведомление пользователю (опционально)
+        show_alert: Показать как alert (всплывающее окно)
+    """
+    url = f"{TELEGRAM_API_BASE}{config.TG_BOT_TOKEN}/answerCallbackQuery"
+    payload: Dict[str, Any] = {"callback_query_id": callback_query_id}
+    if text:
+        payload["text"] = text
+    if show_alert:
+        payload["show_alert"] = True
+    try:
+        response = await make_request("POST", url, json=payload, timeout=10.0)
+        return response.json()
+    except Exception as e:
+        logger.error("Ошибка при answer_callback_query: %s", e)
+        raise
+
+
+async def edit_message_reply_markup(
+    chat_id: int,
+    message_id: int,
+    reply_markup: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Изменить reply_markup сообщения (например, убрать клавиатуру при «Назад»).
+
+    Args:
+        chat_id: ID чата
+        message_id: ID сообщения
+        reply_markup: Новая разметка (пустой dict или None — убрать кнопки)
+    """
+    url = f"{TELEGRAM_API_BASE}{config.TG_BOT_TOKEN}/editMessageReplyMarkup"
+    payload: Dict[str, Any] = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+    }
+    if reply_markup is not None:
+        payload["reply_markup"] = reply_markup
+    try:
+        response = await make_request("POST", url, json=payload, timeout=10.0)
+        return response.json()
+    except Exception as e:
+        logger.error("Ошибка при edit_message_reply_markup: %s", e)
+        raise
+
+
 async def download_file(file_path: str) -> bytes:
     """
     Скачать файл из Telegram по file_path.
@@ -263,75 +318,3 @@ async def download_file(file_path: str) -> bytes:
         raise
 
 
-async def answer_callback_query(
-    callback_query_id: str,
-    text: Optional[str] = None,
-    show_alert: bool = False
-) -> Dict[str, Any]:
-    """
-    Ответить на callback query (убрать "часики" у кнопки).
-    
-    Args:
-        callback_query_id: ID callback query
-        text: Текст ответа (опционально)
-        show_alert: Показать alert вместо уведомления
-        
-    Returns:
-        Ответ от Telegram API
-    """
-    url = f"{TELEGRAM_API_BASE}{config.TG_BOT_TOKEN}/answerCallbackQuery"
-    payload = {
-        "callback_query_id": callback_query_id,
-        "show_alert": show_alert
-    }
-    if text:
-        payload["text"] = text
-    
-    try:
-        response = await make_request(
-            "POST",
-            url,
-            json=payload,
-            timeout=10.0
-        )
-        return response.json()
-    except Exception as e:
-        logger.error(f"Ошибка при ответе на callback query: {e}")
-        raise
-
-
-async def edit_message_reply_markup(
-    chat_id: int,
-    message_id: int,
-    reply_markup: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
-    """
-    Изменить разметку (клавиатуру) у сообщения. Пустой reply_markup убирает кнопки.
-
-    Args:
-        chat_id: ID чата
-        message_id: ID сообщения
-        reply_markup: Новая разметка или None (убрать кнопки)
-
-    Returns:
-        Ответ от Telegram API
-    """
-    url = f"{TELEGRAM_API_BASE}{config.TG_BOT_TOKEN}/editMessageReplyMarkup"
-    payload: Dict[str, Any] = {
-        "chat_id": chat_id,
-        "message_id": message_id,
-    }
-    if reply_markup is not None:
-        payload["reply_markup"] = reply_markup
-
-    try:
-        response = await make_request(
-            "POST",
-            url,
-            json=payload,
-            timeout=10.0,
-        )
-        return response.json()
-    except Exception as e:
-        logger.error(f"Ошибка при изменении разметки сообщения в Telegram: {e}")
-        raise
